@@ -119,12 +119,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/editTextDestino" />
 
-    <!-- Botón Página de Inicio -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mapView"
+        app:layout_constraintVertical_bias="0.0"
+        tools:ignore="MissingConstraints" />
+
     <Button
-        android:id="@+id/btnPaginaInicio"
+        android:id="@+id/btnVerFotos"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="PÁGINA DE INICIO"
+        android:text="VER FOTOS"
         android:textColor="@color/white"
         android:background="@android:color/transparent"
         android:textStyle="bold"
@@ -143,7 +155,7 @@
         android:textColor="@color/white"
         android:backgroundTint="@android:color/holo_red_light"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@id/btnPaginaInicio"
+        app:layout_constraintStart_toEndOf="@id/btnVerFotos"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.9" />

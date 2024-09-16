@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id ("kotlin-kapt")
 }
 
 android {
@@ -47,6 +48,10 @@ dependencies {
     /* Google Maps
     implementation(libs.play.services.maps)*/
     implementation("org.osmdroid:osmdroid-android:6.1.12")
+    implementation(libs.firebase.inappmessaging)
+    implementation ("com.google.guava:guava:31.0.1-android")
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    kapt ("com.github.bumptech.glide:compiler:4.15.1")  // Si usas Kotlin, añade esta línea para la anotación de Glide.
 
     // CameraX
     val cameraxVersion = "1.1.0"
