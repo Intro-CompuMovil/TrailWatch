@@ -11,6 +11,6 @@
     <color name="primary_color">#FF6200EE</color>
     <color name="primary_color_light">#FFBB86FC</color>
     <color name="primary_color_dark">#FF3700B3</color>
-    <color name="progress_green">#4CAF50
-    </color>
+    <color name="progress_green">#4CAF50</color>
+    <color name="colorAccent">#FF4081</color>
 </resources>

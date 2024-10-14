@@ -45,8 +45,8 @@
         android:id="@+id/textViewPeso"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
-        android:text="INGRESE SU PESO"
+        android:layout_marginTop="60dp"
+        android:text="INGRESA TU PESO"
         android:textColor="@color/black"
         android:textSize="25sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -75,7 +75,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="INGRESE SU EDAD"
+        android:text="INGRESA TU EDAD"
         android:textColor="@color/black"
         android:textSize="25sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -114,7 +114,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="INGRESE SU ESTATURA"
+        android:text="INGRESA TU ESTATURA"
         android:textColor="@color/black"
         android:textSize="25sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -147,26 +147,88 @@
         app:layout_constraintTop_toBottomOf="@id/editTextEstatura"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+    <!-- Nuevo TextView para el RH -->
+    <TextView
+        android:id="@+id/textViewRH"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="INGRESA TU RH"
+        android:textColor="@color/black"
+        android:textSize="25sp"
+        app:layout_constraintTop_toBottomOf="@id/errorEstaturaTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+    <!-- Spinner para seleccionar el grupo sanguíneo -->
+    <Spinner
+        android:id="@+id/spinnerGrupoSanguineo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:entries="@array/grupos_sanguineos"
 
-    <!-- Nuevo TextView y EditText para Enfermedad -->
+        app:layout_constraintTop_toBottomOf="@id/textViewRH"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.85" />
+    <!-- Pregunta sobre la enfermedad -->
+    <TextView
+        android:id="@+id/textViewPreguntaEnfermedad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="¿Tienes alguna enfermedad?"
+        android:textColor="@color/black"
+        android:textSize="25sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/spinnerGrupoSanguineo" />
+
+
+
+    <RadioGroup
+        android:id="@+id/radioGroupEnfermedad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/textViewPreguntaEnfermedad"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radioSi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sí" />
+
+        <RadioButton
+            android:id="@+id/radioNo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No"
+            android:checked="true" />
+    </RadioGroup>
+
+    <!-- Campo editable Enfermedad -->
     <TextView
         android:id="@+id/textViewEnfermedad"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="INGRESE SU ENFERMEDAD"
+        android:text="Escribe brevemente tu enfermedad"
         android:textColor="@color/black"
         android:textSize="25sp"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.175"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/errorEstaturaTextView" />
+        app:layout_constraintTop_toBottomOf="@id/radioGroupEnfermedad" />
 
     <EditText
         android:id="@+id/editTextEnfermedad"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Ingrese su enfermedad"
+        android:hint="Máx. 200 caracteres"
+        android:maxLength="200"
+        android:visibility="gone"
         android:textAlignment="center"
         android:textColorHint="@color/gray_light"
         android:textColor="@color/black"
@@ -176,6 +238,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.85" />
+
+    <!-- Contador de caracteres para la enfermedad -->
+    <TextView
+        android:id="@+id/enfermedadCounterTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Te quedan 200 caracteres"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/editTextEnfermedad"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Barra de progreso -->
     <ProgressBar
@@ -187,7 +261,7 @@
         android:max="100"
         android:progress="0"
         android:progressDrawable="@drawable/progress_bar_custom"
-        app:layout_constraintTop_toBottomOf="@id/editTextEnfermedad"
+        app:layout_constraintTop_toBottomOf="@id/enfermedadCounterTextView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.85" />
@@ -234,17 +308,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.7" />
 
-    <ImageView
-        android:id="@+id/checkmarkImageView"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:src="@drawable/ic_check"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp"
-        android:scaleType="centerInside"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

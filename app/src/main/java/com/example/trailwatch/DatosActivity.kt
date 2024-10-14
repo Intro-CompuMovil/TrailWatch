@@ -12,13 +12,7 @@ import android.provider.ContactsContract
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.view.animation.AnimationUtils
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -28,13 +22,20 @@ class DatosActivity : AppCompatActivity() {
     private lateinit var pesoEditText: EditText
     private lateinit var edadEditText: EditText
     private lateinit var estaturaEditText: EditText
+    private lateinit var enfermedadEditText: EditText
+    private lateinit var enfermedadCounterTextView: TextView
     private lateinit var errorEdadTextView: TextView
     private lateinit var errorEstaturaTextView: TextView
     private lateinit var progresoDatos: ProgressBar
     private lateinit var imageBackground: ImageView
     private lateinit var btnAtras: Button
     private lateinit var btnSiguiente: Button
-    private lateinit var seleccionContactoTextView: TextView // Nueva referencia
+    private lateinit var radioGroupEnfermedad: RadioGroup
+    private lateinit var radioSi: RadioButton
+    private lateinit var radioNo: RadioButton
+    private lateinit var spinnerRh: Spinner // Spinner para el grupo sanguíneo
+
+    private var grupoSeleccionado = false
 
     companion object {
         private const val PICK_CONTACT_REQUEST = 1
@@ -49,40 +50,80 @@ class DatosActivity : AppCompatActivity() {
         pesoEditText = findViewById(R.id.editTextPeso)
         edadEditText = findViewById(R.id.editTextEdad)
         estaturaEditText = findViewById(R.id.editTextEstatura)
+        enfermedadEditText = findViewById(R.id.editTextEnfermedad)
+        enfermedadCounterTextView = findViewById(R.id.enfermedadCounterTextView)
         errorEdadTextView = findViewById(R.id.errorEdadTextView)
         errorEstaturaTextView = findViewById(R.id.errorEstaturaTextView)
         progresoDatos = findViewById(R.id.progresoDatos)
         imageBackground = findViewById(R.id.imageBackground)
         btnAtras = findViewById(R.id.btnAtras)
         btnSiguiente = findViewById(R.id.btnSiguiente)
-        seleccionContactoTextView = findViewById(R.id.textViewSeleccionContacto) // Inicializa el nuevo TextView
+        radioGroupEnfermedad = findViewById(R.id.radioGroupEnfermedad)
+        radioSi = findViewById(R.id.radioSi)
+        radioNo = findViewById(R.id.radioNo)
+        spinnerRh = findViewById(R.id.spinnerGrupoSanguineo)
 
         // Desactivar el botón Siguiente inicialmente
         btnSiguiente.isEnabled = false
 
-        // Recibir el tipo de deporte seleccionado (ciclismo o caminata)
-        val deporteSeleccionado = intent.getStringExtra("deporte")
+        // Configurar el Spinner
+        val adapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.grupos_sanguineos,
+            R.layout.spinner_item // Custom layout for Spinner items
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerRh.adapter = adapter
 
-        // Cambiar el fondo dependiendo del deporte seleccionado
-        if (deporteSeleccionado == "ciclismo") {
-            imageBackground.setImageResource(R.drawable.ciclismo0)
-        } else if (deporteSeleccionado == "caminata") {
-            imageBackground.setImageResource(R.drawable.caminata0)
+        // Detectar selección en el Spinner
+        spinnerRh.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                grupoSeleccionado = position != 0 // Verifica que no sea "ELIGE TU GRUPO"
+                updateProgressBar()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                grupoSeleccionado = false
+                updateProgressBar()
+            }
         }
+
+        // Configurar el comportamiento de los botones de radio
+        radioGroupEnfermedad.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.radioSi -> {
+                    enfermedadEditText.visibility = View.VISIBLE
+                    enfermedadCounterTextView.visibility = View.VISIBLE
+                }
+                R.id.radioNo -> {
+                    enfermedadEditText.visibility = View.GONE
+                    enfermedadCounterTextView.visibility = View.GONE
+                    enfermedadEditText.text.clear()
+                }
+            }
+        }
+
+        // Limitar el campo de texto de la enfermedad a 200 caracteres
+        enfermedadEditText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val remainingChars = 200 - (s?.length ?: 0)
+                enfermedadCounterTextView.text = "Te quedan $remainingChars caracteres"
+                if (remainingChars < 0) {
+                    enfermedadEditText.error = "No puedes escribir más de 200 caracteres"
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
 
         // Configurar el botón "Atrás" para volver a la pantalla anterior
         btnAtras.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
+            val intent = Intent(this@DatosActivity, MainActivity::class.java)
+            startActivity(intent)
         }
 
-        // Configurar el botón "Siguiente" para ir a la siguiente actividad con animación
-        btnSiguiente.setOnClickListener {
-            val intent = Intent(this@DatosActivity, AnyEnfermedad::class.java)
-            val options = ActivityOptions.makeCustomAnimation(this, R.anim.fade_in, R.anim.fade_out)
-            startActivity(intent, options.toBundle())
-        }
-
-        // Configurar el botón para seleccionar el contacto de emergencia
+        // Configurar el botón "Siguiente" para ir a la siguiente actividad o seleccionar contacto
         setupSelectContactButton()
 
         // Validaciones y barra de progreso
@@ -129,38 +170,26 @@ class DatosActivity : AppCompatActivity() {
         })
     }
 
-    // Actualizar la barra de progreso según los campos llenados
+    // Actualizar la barra de progreso y activar el botón de continuar si se cumplen las condiciones
     private fun updateProgressBar() {
         val filledFields = listOf(pesoEditText, edadEditText, estaturaEditText)
-            .count { it.text.isNotEmpty() }
+            .count { it.text.isNotEmpty() } + if (grupoSeleccionado) 1 else 0
 
-        val progress = (filledFields / 3.0) * 100
+        // Calcular el progreso
+        val progress = (filledFields / 4.0) * 100 // 4 campos necesarios: peso, edad, estatura, y grupo sanguíneo
+
         progresoDatos.progress = progress.toInt()
 
-        // Referencia al ImageView del checkmark
-        val checkmarkImageView: ImageView = findViewById(R.id.checkmarkImageView)
-
-        // Si los datos están completos, mostrar animación de éxito
-        if (progress == 100.0) {
-            checkmarkImageView.visibility = View.VISIBLE // Mostrar el icono de éxito
-            val bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.bounce)
-            checkmarkImageView.startAnimation(bounceAnimation) // Ejecutar animación de rebote
-
-            // Mostrar el mensaje para elegir un contacto de emergencia
-            seleccionContactoTextView.visibility = View.VISIBLE
-        } else {
-            checkmarkImageView.visibility = View.GONE // Ocultar el icono si no está al 100%
-            seleccionContactoTextView.visibility = View.GONE // Ocultar el mensaje si no está al 100%
-        }
-
-        // Activar el botón Siguiente solo si todos los campos están llenos
-        btnSiguiente.isEnabled = filledFields == 3
+        // Activar el botón Siguiente si todos los campos están llenos
+        btnSiguiente.isEnabled = progress == 100.0
     }
 
+    // Configurar botón para seleccionar contacto de emergencia
     private fun setupSelectContactButton() {
-        val btnSelectContact: Button = findViewById(R.id.btnSiguiente)
-        btnSelectContact.setOnClickListener {
-            requestContactPermission()
+        btnSiguiente.setOnClickListener {
+            if (btnSiguiente.isEnabled) {
+                requestContactPermission()
+            }
         }
     }
 

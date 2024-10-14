@@ -14,24 +14,31 @@ class ActividadDeportesActivity : AppCompatActivity() {
         val btnCiclismo = findViewById<ImageButton>(R.id.btnCiclismo)
         val btnCaminata = findViewById<ImageButton>(R.id.btnCaminata)
         val btnSalir = findViewById<Button>(R.id.btnSalir)
+        val btnVerPerfil = findViewById<Button>(R.id.btnVerPerfil)
 
         // Cuando el usuario selecciona ciclismo
         btnCiclismo.setOnClickListener {
             val intent = Intent(this@ActividadDeportesActivity, PantallaMapaActivity::class.java)
-            intent.putExtra("deporte", "ciclismo")  // Pasar "ciclismo" como deporte seleccionado
+            intent.putExtra("deporte", "ciclismo")
             startActivity(intent)
         }
 
         // Cuando el usuario selecciona caminata
         btnCaminata.setOnClickListener {
             val intent = Intent(this@ActividadDeportesActivity, PantallaMapaActivity::class.java)
-            intent.putExtra("deporte", "caminata")  // Pasar "caminata" como deporte seleccionado
+            intent.putExtra("deporte", "caminata")
             startActivity(intent)
         }
 
         // Cuando el usuario selecciona salir
         btnSalir.setOnClickListener {
             val intent = Intent(this@ActividadDeportesActivity, MainActivity::class.java)
+            startActivity(intent)
+        }
+
+        // Cuando el usuario selecciona Ver Perfil
+        btnVerPerfil.setOnClickListener {
+            val intent = Intent(this@ActividadDeportesActivity, PerfilActivity::class.java)
             startActivity(intent)
         }
     }

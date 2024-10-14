@@ -5,12 +5,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 
 class RegistroActivity : AppCompatActivity() {
@@ -45,6 +40,7 @@ class RegistroActivity : AppCompatActivity() {
 
         // Desactivar el botón Continuar inicialmente
         btnContinuar.isEnabled = false
+
         // Mostrar u ocultar la contraseña
         btnShowPassword.setOnClickListener {
             togglePasswordVisibility()
@@ -85,9 +81,7 @@ class RegistroActivity : AppCompatActivity() {
 
         // Acción del botón Continuar
         btnContinuar.setOnClickListener {
-            val intent = Intent(this, DatosActivity::class.java)
-            startActivity(intent)
-            finish()
+            registrarUsuario()
         }
     }
 
@@ -136,7 +130,6 @@ class RegistroActivity : AppCompatActivity() {
                 usuario.isNotEmpty() && contrasena.isNotEmpty() && contrasena[0].isUpperCase()
     }
 
-
     // Mostrar u ocultar la contraseña
     private fun togglePasswordVisibility() {
         if (isPasswordVisible) {
@@ -152,4 +145,66 @@ class RegistroActivity : AppCompatActivity() {
         editTextContrasena.setSelection(editTextContrasena.text.length) // Mover cursor al final
     }
 
+    // Método para registrar al usuario
+    private fun registrarUsuario() {
+        val nombre = editTextNombre.text.toString().trim()
+        val apellido = editTextApellido.text.toString().trim()
+        val correo = editTextCorreo.text.toString().trim()
+        val username = editTextUsuario.text.toString().trim()
+        val contraseña = editTextContrasena.text.toString()
+
+        // Validaciones
+        if (nombre.isEmpty() || apellido.isEmpty() || correo.isEmpty() || username.isEmpty() || contraseña.isEmpty()) {
+            Toast.makeText(this, "Todos los campos son obligatorios", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Verificar formato del correo electrónico
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
+            Toast.makeText(this, "Ingrese un correo electrónico válido", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Verifica que la contraseña comience con mayúscula
+        if (!contraseña[0].isUpperCase()) {
+            Toast.makeText(this, "La contraseña debe comenzar con una letra mayúscula.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Leer usuarios existentes
+        val usuarios = UsuarioUtils.leerUsuariosDesdeArchivo(this)
+
+        // Verificar si el nombre de usuario o correo ya existen
+        if (usuarios.any { it.username == username }) {
+            Toast.makeText(this, "El nombre de usuario ya está registrado", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (usuarios.any { it.correo == correo }) {
+            Toast.makeText(this, "El correo ya está registrado", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Crear nuevo usuario
+        val nuevoUsuario = Usuario(
+            username = username,
+            nombre = nombre,
+            apellido = apellido,
+            correo = correo,
+            contraseña = contraseña
+        )
+
+        // Agregar el nuevo usuario a la lista
+        usuarios.add(nuevoUsuario)
+
+        // Guardar la lista actualizada en el archivo JSON
+        UsuarioUtils.guardarUsuariosEnArchivo(this, usuarios)
+
+        Toast.makeText(this, "Registro exitoso", Toast.LENGTH_SHORT).show()
+
+        // Navegar a la siguiente actividad
+        val intent = Intent(this, DatosActivity::class.java)
+        intent.putExtra("username", username)
+        startActivity(intent)
+        finish()
+    }
 }

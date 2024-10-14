@@ -2,11 +2,10 @@ package com.example.trailwatch
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Switch
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class InicioSesionActivity : AppCompatActivity() {
@@ -21,7 +20,6 @@ class InicioSesionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_inicio_sesion)
 
         initViews()
-        setupTextWatchers()
         setupOnClickListeners()
     }
 
@@ -30,67 +28,47 @@ class InicioSesionActivity : AppCompatActivity() {
         passwordEditText = findViewById(R.id.InicioSesionContrasenha)
         continuarButton = findViewById(R.id.btnContinuar)
         switchMantenermeConectado = findViewById(R.id.switchMantenermeConectado)
-
-        // Desactivar botón al inicio
-        continuarButton.isEnabled = false
-    }
-
-    private fun setupTextWatchers() {
-        val textWatcher = object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                checkFieldsForEmptyValues()
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        }
-
-        emailEditText.addTextChangedListener(textWatcher)
-        passwordEditText.addTextChangedListener(textWatcher)
-    }
-
-    private fun checkFieldsForEmptyValues() {
-        continuarButton.isEnabled = emailEditText.text.isNotEmpty() && passwordEditText.text.isNotEmpty()
     }
 
     private fun setupOnClickListeners() {
         continuarButton.setOnClickListener {
-            // Navegar a la pantalla con las opciones de ciclismo y caminata
-            navigateToActividadDeportes()
-        }
-
-        findViewById<Button>(R.id.btnContinuar).setOnClickListener {
             handleLogin()
         }
     }
 
-    private fun navigateToActividadDeportes() {
-        val intent = Intent(this@InicioSesionActivity, ActividadDeportesActivity::class.java)
-        startActivity(intent)
-    }
-
     private fun handleLogin() {
-        val mantenerConectado = switchMantenermeConectado.isChecked
-        saveUserPreferences(mantenerConectado)
-        navigateToPrincipalActivity(mantenerConectado)
+        val correoIngresado = emailEditText.text.toString().trim()
+        val contraseñaIngresada = passwordEditText.text.toString()
+
+        // Leer usuarios desde el archivo JSON
+        val usuarios = UsuarioUtils.leerUsuariosDesdeArchivo(this)
+
+        // Buscar usuario por correo
+        val usuarioEncontrado = usuarios.firstOrNull { it.correo == correoIngresado }
+
+        if (usuarioEncontrado != null && usuarioEncontrado.contraseña == contraseñaIngresada) {
+            // Credenciales correctas
+            val mantenerConectado = switchMantenermeConectado.isChecked
+            saveUserPreferences(mantenerConectado, usuarioEncontrado.username)
+            navigateToActividadDeportes()
+        } else {
+            // Credenciales incorrectas
+            Toast.makeText(this, "Correo o contraseña incorrectos", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    private fun saveUserPreferences(mantenerConectado: Boolean) {
+    private fun saveUserPreferences(mantenerConectado: Boolean, username: String) {
         val sharedPreferences = getSharedPreferences("MiPreferencia", MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putBoolean("mantenerConectado", mantenerConectado)
-        editor.putString("usuario", "nombre_usuario") // Guarda los datos del usuario
-        editor.apply()
+        with(sharedPreferences.edit()) {
+            putBoolean("mantenerConectado", mantenerConectado)
+            putString("username", username)
+            apply()
+        }
     }
 
-    private fun navigateToPrincipalActivity(mantenerConectado: Boolean) {
-        val intent = Intent(this, ActividadDeportesActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
+    private fun navigateToActividadDeportes() {
+        val intent = Intent(this, ActividadDeportesActivity::class.java)
         startActivity(intent)
-
-        if (!mantenerConectado) {
-            finish()
-        }
+        finish()
     }
 }

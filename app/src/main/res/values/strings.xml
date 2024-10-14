@@ -1,5 +1,15 @@
 <resources>
     <string name="app_name">trailwatch</string>
     <string name="fondo_deporte">Fondo de deporte</string>
-
+    <string-array name="grupos_sanguineos">
+        <item>ELIGE TU GRUPO</item>
+        <item>O+</item>
+        <item>O-</item>
+        <item>A+</item>
+        <item>A-</item>
+        <item>B+</item>
+        <item>B-</item>
+        <item>AB+</item>
+        <item>AB-</item>
+    </string-array>
 </resources>
