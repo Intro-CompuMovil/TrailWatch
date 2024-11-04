@@ -1,102 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/fondo">
 
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="232dp"
-        android:layout_height="73dp"
-        android:layout_marginTop="88dp"
-        android:background="#BCFBC8B7"
-        android:gravity="center"
-        android:text="INICIO DE SESION"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <!-- Contenedor con fondo semitransparente -->
+    <LinearLayout
+        android:id="@+id/container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#B3000000"
+    android:padding="24dp"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
 
+    <!-- Título -->
+    <TextView
+        android:id="@+id/textViewTitulo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TrailWatch"
+        android:textColor="@color/white"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Subtítulo -->
+    <TextView
+        android:id="@+id/textViewSubtitulo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Inicio de Sesión"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Campo de Correo -->
     <EditText
         android:id="@+id/InicioSesionCorreo"
-        android:layout_width="312dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="344dp"
-        android:autofillHints="emailAddress"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:background="@drawable/edit_text"
-        android:ems="10"
-        android:gravity="center"
         android:hint="Correo"
         android:inputType="textEmailAddress"
+        android:padding="10dp"
         android:textColor="@color/black"
-        android:textColorHint="@color/black"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.494"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        android:textColorHint="@color/gray_light"
+        android:layout_marginBottom="16dp" />
 
+    <!-- Campo de Contraseña -->
     <EditText
         android:id="@+id/InicioSesionContrasenha"
-        android:layout_width="312dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="20dp"
-        android:autofillHints="password"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:background="@drawable/edit_text"
-        android:ems="10"
-        android:gravity="center"
-        android:hint="contraseña"
+        android:hint="Contraseña"
         android:inputType="textPassword"
+        android:padding="10dp"
         android:textColor="@color/black"
-        android:textColorHint="@color/black"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.494"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/InicioSesionCorreo" />
+        android:textColorHint="@color/gray_light"
+        android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/btnOlvideMiContrasenha"
-        android:layout_width="143dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="#BCFBC8B7"
-        android:text="olvide mi constraseña"
-        android:textColor="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.182"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/InicioSesionContrasenha"
-        app:layout_constraintVertical_bias="0.0" />
-
-    <Button
-        android:id="@+id/btnContinuar"
-        android:layout_width="143dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="#BCFBC8B7"
-        android:text="Continuar"
-        android:textColor="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.342"
-        app:layout_constraintStart_toEndOf="@+id/btnOlvideMiContrasenha"
-        app:layout_constraintTop_toBottomOf="@+id/InicioSesionContrasenha"
-        app:layout_constraintVertical_bias="0.0" />
-
+    <!-- Switch Mantenerme Conectado -->
     <Switch
         android:id="@+id/switchMantenermeConectado"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Mantenerme conectado"
         android:textColor="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnContinuar"
-        app:layout_constraintVertical_bias="0.0" />
+        android:layout_marginBottom="16dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Botón Iniciar Sesión -->
+    <Button
+        android:id="@+id/btnContinuar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:backgroundTint="#BCFBC8B7"
+        android:text="Iniciar Sesión"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Enlaces de texto -->
+    <TextView
+        android:id="@+id/textViewOlvideContrasena"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="¿Olvidaste tu contraseña?"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/textViewRegistrarse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="¿No tienes cuenta? Regístrate"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:layout_gravity="center_horizontal" />
+
+</LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,7 +1,6 @@
 package com.example.trailwatch
 
 import android.Manifest
-import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -33,9 +32,16 @@ class DatosActivity : AppCompatActivity() {
     private lateinit var radioGroupEnfermedad: RadioGroup
     private lateinit var radioSi: RadioButton
     private lateinit var radioNo: RadioButton
-    private lateinit var spinnerRh: Spinner // Spinner para el grupo sanguíneo
+    private lateinit var spinnerRh: Spinner
 
     private var grupoSeleccionado = false
+
+    // Variables para almacenar datos recibidos de RegistroActivity
+    private var nombre: String? = null
+    private var apellido: String? = null
+    private var correo: String? = null
+    private var username: String? = null
+    private var contraseña: String? = null
 
     companion object {
         private const val PICK_CONTACT_REQUEST = 1
@@ -44,6 +50,7 @@ class DatosActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Establecer el contenido de la vista
         setContentView(R.layout.activity_datos)
 
         // Referencias a los campos
@@ -66,11 +73,18 @@ class DatosActivity : AppCompatActivity() {
         // Desactivar el botón Siguiente inicialmente
         btnSiguiente.isEnabled = false
 
+        // Obtener datos pasados desde RegistroActivity
+        nombre = intent.getStringExtra("nombre")
+        apellido = intent.getStringExtra("apellido")
+        correo = intent.getStringExtra("correo")
+        username = intent.getStringExtra("username")
+        contraseña = intent.getStringExtra("contraseña")
+
         // Configurar el Spinner
         val adapter = ArrayAdapter.createFromResource(
             this,
             R.array.grupos_sanguineos,
-            R.layout.spinner_item // Custom layout for Spinner items
+            android.R.layout.simple_spinner_item // Puedes personalizar el layout
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerRh.adapter = adapter
@@ -119,8 +133,7 @@ class DatosActivity : AppCompatActivity() {
 
         // Configurar el botón "Atrás" para volver a la pantalla anterior
         btnAtras.setOnClickListener {
-            val intent = Intent(this@DatosActivity, MainActivity::class.java)
-            startActivity(intent)
+            finish()
         }
 
         // Configurar el botón "Siguiente" para ir a la siguiente actividad o seleccionar contacto
@@ -188,6 +201,8 @@ class DatosActivity : AppCompatActivity() {
     private fun setupSelectContactButton() {
         btnSiguiente.setOnClickListener {
             if (btnSiguiente.isEnabled) {
+                // Guardar los datos del usuario antes de abrir los contactos
+                guardarUsuario()
                 requestContactPermission()
             }
         }
@@ -214,6 +229,9 @@ class DatosActivity : AppCompatActivity() {
         if (requestCode == PICK_CONTACT_REQUEST && resultCode == RESULT_OK) {
             val contactUri: Uri = data?.data ?: return
             handleSelectedContact(contactUri)
+        } else {
+            // Si el usuario cancela la selección de contacto, ir a la siguiente actividad
+            navigateToActividadDeportes()
         }
     }
 
@@ -265,8 +283,62 @@ class DatosActivity : AppCompatActivity() {
 
         Toast.makeText(this, "Contacto de emergencia guardado: $contactName", Toast.LENGTH_SHORT).show()
 
+        navigateToActividadDeportes()
+    }
+
+    private fun navigateToActividadDeportes() {
         val intent = Intent(this, ActividadDeportesActivity::class.java)
         startActivity(intent)
+        finish()
+    }
+
+    private fun guardarUsuario() {
+        // Obtener los datos ingresados en esta actividad
+        val peso = pesoEditText.text.toString().toDoubleOrNull()
+        val edad = edadEditText.text.toString().toIntOrNull()
+        val estatura = estaturaEditText.text.toString().toDoubleOrNull()
+        val rh = spinnerRh.selectedItem.toString()
+        val tieneEnfermedad = radioSi.isChecked
+        val enfermedad = if (tieneEnfermedad) enfermedadEditText.text.toString() else null
+
+        // Crear nuevo usuario
+        val nuevoUsuario = Usuario(
+            username = username ?: "",
+            nombre = nombre ?: "",
+            apellido = apellido ?: "",
+            correo = correo ?: "",
+            contraseña = contraseña ?: "",
+            peso = peso,
+            edad = edad,
+            estatura = estatura,
+            rh = rh,
+            enfermedad = enfermedad
+        )
+
+        // Leer usuarios existentes
+        val usuarios = UsuarioUtils.leerUsuariosDesdeArchivo(this)
+
+        // Verificar si el usuario ya existe
+        val usuarioExistente = usuarios.firstOrNull { it.username == nuevoUsuario.username || it.correo == nuevoUsuario.correo }
+
+        if (usuarioExistente != null) {
+            Toast.makeText(this, "El usuario o correo ya está registrado", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Agregar el nuevo usuario a la lista
+        usuarios.add(nuevoUsuario)
+
+        // Guardar la lista actualizada en el archivo JSON
+        UsuarioUtils.guardarUsuariosEnArchivo(this, usuarios)
+
+        // Guardar el nombre de usuario en SharedPreferences
+        val sharedPreferences = getSharedPreferences("MiPreferencia", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("username", nuevoUsuario.username)
+        editor.apply()
+
+        Toast.makeText(this, "Datos guardados", Toast.LENGTH_SHORT).show()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -277,6 +349,8 @@ class DatosActivity : AppCompatActivity() {
                     showContactPicker()
                 } else {
                     Toast.makeText(this, "Permiso para leer contactos denegado", Toast.LENGTH_SHORT).show()
+                    // Si el permiso es denegado, ir a la siguiente actividad
+                    navigateToActividadDeportes()
                 }
             }
         }

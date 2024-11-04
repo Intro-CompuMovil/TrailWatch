@@ -26,7 +26,10 @@ object UsuarioUtils {
                 contraseña = usuarioJSON.getString("contraseña"),
                 peso = if (usuarioJSON.has("peso")) usuarioJSON.getDouble("peso") else null,
                 edad = if (usuarioJSON.has("edad")) usuarioJSON.getInt("edad") else null,
-                estatura = if (usuarioJSON.has("estatura")) usuarioJSON.getDouble("estatura") else null
+                estatura = if (usuarioJSON.has("estatura")) usuarioJSON.getDouble("estatura") else null,
+                rh = if (usuarioJSON.has("rh")) usuarioJSON.getString("rh") else null,
+                enfermedad = if (usuarioJSON.has("enfermedad")) usuarioJSON.getString("enfermedad") else null,
+                imagenPerfil = if (usuarioJSON.has("imagenPerfil")) usuarioJSON.getString("imagenPerfil") else null
             )
             usuarios.add(usuario)
         }
@@ -48,6 +51,9 @@ object UsuarioUtils {
             usuario.peso?.let { usuarioJSON.put("peso", it) }
             usuario.edad?.let { usuarioJSON.put("edad", it) }
             usuario.estatura?.let { usuarioJSON.put("estatura", it) }
+            usuario.rh?.let { usuarioJSON.put("rh", it) }
+            usuario.enfermedad?.let { usuarioJSON.put("enfermedad", it) }
+            usuario.imagenPerfil?.let { usuarioJSON.put("imagenPerfil", it) }
             jsonArray.put(usuarioJSON)
         }
 

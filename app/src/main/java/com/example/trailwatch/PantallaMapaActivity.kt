@@ -9,9 +9,9 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.hardware.camera2.CameraManager
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
-import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -30,11 +30,20 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.json.JSONObject
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 import java.io.File
+import java.io.IOException
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -49,9 +58,11 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
     private lateinit var mapView: MapView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var editTextOrigen: EditText
+    private lateinit var editTextDestino: EditText
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        private const val SMS_PERMISSION_REQUEST_CODE = 100
     }
 
     private lateinit var cameraExecutor: ExecutorService
@@ -66,7 +77,7 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
 
         // Referencia a los elementos
         editTextOrigen = findViewById(R.id.editTextOrigen)
-        val editTextDestino = findViewById<EditText>(R.id.editTextDestino)
+        editTextDestino = findViewById<EditText>(R.id.editTextDestino)
         val btnVerFotos = findViewById<Button>(R.id.btnVerFotos)
         val btnSos = findViewById<Button>(R.id.btnSos)
         imageBackground = findViewById(R.id.imageBackground)
@@ -107,15 +118,12 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
         // Inicializar FusedLocationProviderClient para obtener la ubicación
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Inicializar FusedLocationProviderClient para obtener la ubicación
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // Configurar osmdroid
         Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
 
         // Inicializar MapView
         mapView = findViewById(R.id.mapView)
-        mapView.setBuiltInZoomControls(true)
         mapView.setMultiTouchControls(true)
 
         // Centrar mapa en una ubicación por defecto
@@ -126,6 +134,7 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
 
         // Solicitar permisos de ubicación
         requestLocationPermission()
+        requestSmsPermissions()
 
         previewView = findViewById(R.id.previewView)
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -138,6 +147,15 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
+        val btnBuscarRuta = findViewById<Button>(R.id.btnBuscarRuta)
+        btnBuscarRuta.setOnClickListener {
+            val address = editTextDestino.text.toString()
+            if (address.isNotEmpty()) {
+                searchAddress(address)
+            } else {
+                Toast.makeText(this, "Por favor ingrese un destino", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     }
 
@@ -148,6 +166,16 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
         }
         mapView.onResume()
     }
+
+    private fun addMarker(geoPoint: GeoPoint) {
+        val marker = Marker(mapView)
+        marker.position = geoPoint
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        marker.title = "Marcador"
+        mapView.overlays.add(marker)
+        mapView.invalidate() // Para actualizar el mapa y mostrar el marcador
+    }
+
 
     override fun onPause() {
         super.onPause()
@@ -170,6 +198,20 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
         }
     }
 
+    private fun requestSmsPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+
+            // Solicitar permisos
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_SMS),
+                SMS_PERMISSION_REQUEST_CODE)
+        } else {
+            // Los permisos ya han sido concedidos
+            Toast.makeText(this, "Permisos de SMS ya concedidos", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Manejar el resultado de la solicitud de permisos
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -182,6 +224,13 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
                 getLastKnownLocation()
             } else {
                 Toast.makeText(this, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
+            }
+        }
+        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permisos de SMS concedidos", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Permisos de SMS denegados", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -216,6 +265,49 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
                 }
         }
     }
+
+    private fun searchAddress(address: String) {
+        val geocoder = Geocoder(this, Locale.getDefault())
+        try {
+            val addresses = geocoder.getFromLocationName(address, 1)
+            if (addresses != null && addresses.isNotEmpty()) {
+                val location = addresses[0]
+                val destinationGeoPoint = GeoPoint(location.latitude, location.longitude)
+
+                // Colocar marcador en la dirección encontrada
+                val marker = Marker(mapView)
+                marker.position = destinationGeoPoint
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                marker.title = address
+                mapView.overlays.add(marker)
+
+                // Mover la cámara y enfocar en el marcador
+                mapView.controller.setCenter(destinationGeoPoint)
+                mapView.controller.setZoom(15.0)
+
+                // Obtener la última ubicación conocida
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                        if (location != null) {
+                            val currentLocation = GeoPoint(location.latitude, location.longitude)
+                            // Dibujar la ruta desde la ubicación actual hasta el destino
+                            drawRoute(currentLocation, destinationGeoPoint)
+                        } else {
+                            Toast.makeText(this, "No se pudo obtener la ubicación actual", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(this, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this, "Dirección no encontrada", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error en la búsqueda de la dirección", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+    }
+
 
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
@@ -252,8 +344,18 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
         // No se necesita manejar cambios en la precisión para el sensor de luz
     }
 
-    override fun onLocationChanged(p0: Location) {
-        TODO("Not yet implemented")
+    override fun onLocationChanged(location: Location) {
+        // Update the user location on the map
+        val userLocation = GeoPoint(location.latitude, location.longitude)
+        mapView.controller.setCenter(userLocation)
+
+        // Update the marker position or add a new marker if necessary
+        val marker = Marker(mapView)
+        marker.position = userLocation
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        marker.title = "Tu ubicación actual"
+        mapView.overlays.add(marker)
+        mapView.invalidate() // Refresh the map
     }
 
     // Solicitar el permiso de cámara en tiempo de ejecución
@@ -319,6 +421,65 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
         }, captureInterval)
     }
 
+    private fun drawRoute(from: GeoPoint, to: GeoPoint) {
+        val url = "http://router.project-osrm.org/route/v1/driving/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?overview=full&geometries=geojson"
+        val request = Request.Builder().url(url).build()
+
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@PantallaMapaActivity, "Error al obtener la ruta", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (!response.isSuccessful) {
+                    runOnUiThread {
+                        Toast.makeText(this@PantallaMapaActivity, "Error en la respuesta de la ruta", Toast.LENGTH_SHORT).show()
+                    }
+                    return
+                }
+
+                response.body?.string()?.let { responseData ->
+                    try {
+                        val json = JSONObject(responseData)
+                        val routes = json.optJSONArray("routes")
+
+                        if (routes != null && routes.length() > 0) {
+                            val geometry = routes.getJSONObject(0).getJSONObject("geometry")
+                            val coordinates = geometry.getJSONArray("coordinates")
+                            val polylinePoints = mutableListOf<GeoPoint>()
+
+                            for (i in 0 until coordinates.length()) {
+                                val point = coordinates.getJSONArray(i)
+                                val lon = point.getDouble(0)
+                                val lat = point.getDouble(1)
+                                polylinePoints.add(GeoPoint(lat, lon))
+                            }
+
+                            runOnUiThread {
+                                val polyline = Polyline()
+                                polyline.setPoints(polylinePoints)
+                                mapView.overlays.add(polyline)
+                                mapView.invalidate() // Actualizar el mapa
+                            }
+                        } else {
+                            runOnUiThread {
+                                Toast.makeText(this@PantallaMapaActivity, "No se encontró una ruta", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        runOnUiThread {
+                            Toast.makeText(this@PantallaMapaActivity, "Error al procesar la respuesta de la ruta", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+
     // Obtener el directorio para guardar fotos
     private fun getOutputDirectory(): File {
         val mediaDir = externalMediaDirs.firstOrNull()?.let {
@@ -326,6 +487,8 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
         }
         return mediaDir ?: filesDir
     }
+
+
 
     override fun onDestroy() {
         super.onDestroy()

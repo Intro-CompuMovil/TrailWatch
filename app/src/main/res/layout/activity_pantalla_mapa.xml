@@ -99,6 +99,18 @@
         app:layout_constraintStart_toEndOf="@id/textViewDestino"
         app:layout_constraintTop_toBottomOf="@id/editTextOrigen" />
 
+    <Button
+        android:id="@+id/btnBuscarRuta"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="BUSCAR RUTA"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editTextDestino"
+        android:layout_marginTop="16dp" />
+
     <org.osmdroid.views.MapView
         android:id="@+id/mapView"
         android:layout_width="406dp"
@@ -107,7 +119,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editTextDestino" />
+        app:layout_constraintTop_toBottomOf="@id/btnBuscarRuta" />
 
     <ImageView
         android:id="@+id/mapPlaceholder"
@@ -122,7 +134,7 @@
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="40dp"
         android:layout_gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

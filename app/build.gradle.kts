@@ -1,3 +1,4 @@
+// build.gradle.kts
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,16 +7,18 @@ plugins {
 
 android {
     namespace = "com.example.trailwatch"
-    compileSdk = 34  // Actualizado a 34
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.trailwatch"
-        minSdk = 26  // Actualizado de 21 a 26
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-    }
 
+        // Puedes agregar tu API key aquí si prefieres, pero asegúrate de manejarla de forma segura
+        // manifestPlaceholders["graphHopperApiKey"] = "TU_API_KEY_AQUÍ"
+    }
 
     buildTypes {
         release {
@@ -28,16 +31,16 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8  // Asegúrate de que coincide con tu configuración
+        sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"  // Asegúrate de que coincide con las opciones de compilación
+        jvmTarget = "1.8"
     }
 
     buildFeatures {
-        viewBinding = true  // Si estás utilizando View Binding
+        viewBinding = true
     }
 }
 
@@ -51,12 +54,18 @@ dependencies {
 
     // OSMDroid
     implementation("org.osmdroid:osmdroid-android:6.1.12")
+    implementation("com.github.MKergall:osmbonuspack:6.9.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation ("com.android.volley:volley:1.2.1")
 
-    // Firebase In-App Messaging
-    implementation("com.google.firebase:firebase-inappmessaging-display:20.3.2")
 
-    // Guava
-    implementation("com.google.guava:guava:31.0.1-android")
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // Retrofit y Gson para llamadas a APIs
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
 
     // Glide
     implementation("com.github.bumptech.glide:glide:4.15.1")

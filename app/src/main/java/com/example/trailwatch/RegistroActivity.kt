@@ -81,7 +81,7 @@ class RegistroActivity : AppCompatActivity() {
 
         // Acción del botón Continuar
         btnContinuar.setOnClickListener {
-            registrarUsuario()
+            navegarADatosActivity()
         }
     }
 
@@ -145,8 +145,8 @@ class RegistroActivity : AppCompatActivity() {
         editTextContrasena.setSelection(editTextContrasena.text.length) // Mover cursor al final
     }
 
-    // Método para registrar al usuario
-    private fun registrarUsuario() {
+    // Método para navegar a DatosActivity pasando los datos ingresados
+    private fun navegarADatosActivity() {
         val nombre = editTextNombre.text.toString().trim()
         val apellido = editTextApellido.text.toString().trim()
         val correo = editTextCorreo.text.toString().trim()
@@ -184,26 +184,13 @@ class RegistroActivity : AppCompatActivity() {
             return
         }
 
-        // Crear nuevo usuario
-        val nuevoUsuario = Usuario(
-            username = username,
-            nombre = nombre,
-            apellido = apellido,
-            correo = correo,
-            contraseña = contraseña
-        )
-
-        // Agregar el nuevo usuario a la lista
-        usuarios.add(nuevoUsuario)
-
-        // Guardar la lista actualizada en el archivo JSON
-        UsuarioUtils.guardarUsuariosEnArchivo(this, usuarios)
-
-        Toast.makeText(this, "Registro exitoso", Toast.LENGTH_SHORT).show()
-
-        // Navegar a la siguiente actividad
+        // Pasar los datos a DatosActivity
         val intent = Intent(this, DatosActivity::class.java)
+        intent.putExtra("nombre", nombre)
+        intent.putExtra("apellido", apellido)
+        intent.putExtra("correo", correo)
         intent.putExtra("username", username)
+        intent.putExtra("contraseña", contraseña)
         startActivity(intent)
         finish()
     }
