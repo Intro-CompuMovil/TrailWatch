@@ -24,7 +24,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Trailwatch">
-
+        android:networkSecurityConfig="@xml/network_security_config">
         <!-- Meta-data para la API key de GraphHopper -->
         <meta-data
             android:name="com.example.trailwatch.GRAPHHOPPER_API_KEY"

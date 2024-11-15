@@ -55,6 +55,9 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
     private var cameraManager: CameraManager? = null
     private var isFlashOn = false
 
+    private var originMarker: Marker? = null
+    private var destinationMarker: Marker? = null
+
     private lateinit var mapView: MapView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var editTextOrigen: EditText
@@ -266,6 +269,32 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
         }
     }
 
+    private fun setDefaultOriginMarker() {
+        // Obtener la última ubicación conocida
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    val currentLocation = GeoPoint(location.latitude, location.longitude)
+                    // Colocar marcador de origen en la ubicación actual
+                    if (originMarker == null) {
+                        originMarker = Marker(mapView)
+                        originMarker?.position = currentLocation
+                        originMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        originMarker?.title = "YOUR LOCATION"
+                        mapView.overlays.add(originMarker)
+                    }
+                    // Mover la cámara para centrar el mapa en la ubicación actual
+                    mapView.controller.setCenter(currentLocation)
+                    mapView.controller.setZoom(15.0)
+                } else {
+                    Toast.makeText(this, "No se pudo obtener la ubicación actual", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(this, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun searchAddress(address: String) {
         val geocoder = Geocoder(this, Locale.getDefault())
         try {
@@ -274,14 +303,19 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
                 val location = addresses[0]
                 val destinationGeoPoint = GeoPoint(location.latitude, location.longitude)
 
-                // Colocar marcador en la dirección encontrada
-                val marker = Marker(mapView)
-                marker.position = destinationGeoPoint
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                marker.title = address
-                mapView.overlays.add(marker)
+                // Eliminar el marcador de destino previo si existe
+                destinationMarker?.let {
+                    mapView.overlays.remove(it)
+                }
 
-                // Mover la cámara y enfocar en el marcador
+                // Colocar marcador de destino
+                destinationMarker = Marker(mapView)
+                destinationMarker?.position = destinationGeoPoint
+                destinationMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                destinationMarker?.title = address
+                mapView.overlays.add(destinationMarker)
+
+                // Mover la cámara y enfocar en el marcador de destino
                 mapView.controller.setCenter(destinationGeoPoint)
                 mapView.controller.setZoom(15.0)
 
@@ -422,34 +456,44 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
     }
 
     private fun drawRoute(from: GeoPoint, to: GeoPoint) {
-        val url = "http://router.project-osrm.org/route/v1/driving/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?overview=full&geometries=geojson"
+        // URL de la API de OSRM para obtener la ruta
+        val url = "https://router.project-osrm.org/route/v1/driving/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?overview=full&geometries=geojson"
+        // Realizamos la solicitud
         val request = Request.Builder().url(url).build()
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
+                Log.e("Ruta", "Error en la solicitud: ${e.message}")
                 runOnUiThread {
-                    Toast.makeText(this@PantallaMapaActivity, "Error al obtener la ruta", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PantallaMapaActivity, "Error al obtener la ruta: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+
 
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
                     runOnUiThread {
+                        // Mostrar mensaje si la respuesta no es exitosa
                         Toast.makeText(this@PantallaMapaActivity, "Error en la respuesta de la ruta", Toast.LENGTH_SHORT).show()
                     }
                     return
                 }
 
+                // Obtener la respuesta de la API
                 response.body?.string()?.let { responseData ->
                     try {
+                        // Parseamos el JSON de la respuesta
                         val json = JSONObject(responseData)
                         val routes = json.optJSONArray("routes")
 
+                        // Verificamos si hay rutas en la respuesta
                         if (routes != null && routes.length() > 0) {
+                            // Obtenemos la geometría de la primera ruta
                             val geometry = routes.getJSONObject(0).getJSONObject("geometry")
                             val coordinates = geometry.getJSONArray("coordinates")
                             val polylinePoints = mutableListOf<GeoPoint>()
 
+                            // Parseamos las coordenadas y las agregamos a la lista de puntos
                             for (i in 0 until coordinates.length()) {
                                 val point = coordinates.getJSONArray(i)
                                 val lon = point.getDouble(0)
@@ -457,18 +501,21 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
                                 polylinePoints.add(GeoPoint(lat, lon))
                             }
 
+                            // Creamos la Polyline y la agregamos al mapa
                             runOnUiThread {
                                 val polyline = Polyline()
                                 polyline.setPoints(polylinePoints)
                                 mapView.overlays.add(polyline)
-                                mapView.invalidate() // Actualizar el mapa
+                                mapView.invalidate() // Actualizar el mapa para mostrar la ruta
                             }
                         } else {
+                            // Mostrar un mensaje si no se encuentra una ruta
                             runOnUiThread {
                                 Toast.makeText(this@PantallaMapaActivity, "No se encontró una ruta", Toast.LENGTH_SHORT).show()
                             }
                         }
                     } catch (e: Exception) {
+                        // Mostrar error si ocurre una excepción al procesar la respuesta
                         e.printStackTrace()
                         runOnUiThread {
                             Toast.makeText(this@PantallaMapaActivity, "Error al procesar la respuesta de la ruta", Toast.LENGTH_SHORT).show()
@@ -478,6 +525,7 @@ class PantallaMapaActivity : AppCompatActivity(), SensorEventListener,LocationLi
             }
         })
     }
+
 
 
     // Obtener el directorio para guardar fotos
