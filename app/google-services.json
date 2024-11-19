@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "447941420408",
+    "project_id": "proyectoicm-8bfb5",
+    "storage_bucket": "proyectoicm-8bfb5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:447941420408:android:bdea098fed10225337148d",
+        "android_client_info": {
+          "package_name": "com.example.trailwatch"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOuAFbuFKLR4_v566uZovBVNjyhaFZIiA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
